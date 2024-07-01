@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 10px 0; }
+        button { padding: 10px 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            Username: <input type="text" name="username" required><br>
+            Password: <input type="password" name="password" required><br>
+            <button type="submit">Login</button>
+        </form>
+        <a href="/index.html">Back to Home</a>
+        <p id="message"></p>
+    </div>
+    <script>
+        document.getElementById('loginForm').onsubmit = async function(e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+            let response = await fetch('/login', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            });
+            let message = document.getElementById('message');
+            if (response.ok) {
+                let user = await response.json();
+                message.textContent = 'Login successful. Redirecting to your dashboard...';
+                if (user.role === 'admin') {
+                    setTimeout(() => { window.location.href = '/admin_dashboard.html'; }, 2000);
+                } else {
+                    setTimeout(() => { window.location.href = '/user_dashboard.html'; }, 2000);
+                }
+            } else {
+                message.textContent = 'Login failed. Please try again.';
+            }
+        };
+    </script>
+</body>
+</html>

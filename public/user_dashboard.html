@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+        h1 { color: #333; }
+        .scores { margin-top: 20px; }
+        .scores table { width: 100%; border-collapse: collapse; }
+        .scores th, .scores td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome, <span id="username"></span></h1>
+        <button onclick="takeQuiz()">Take a Quiz</button>
+        <div class="scores">
+            <h2>Your Scores</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Quiz #</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody id="scoresTable">
+                </tbody>
+            </table>
+        </div>
+        <a href="/logout">Logout</a>
+    </div>
+    <script>
+        async function loadUserData() {
+            let response = await fetch('/user');
+            let user = await response.json();
+            document.getElementById('username').textContent = user.username;
+            let scoresTable = document.getElementById('scoresTable');
+            user.scores.forEach((score, index) => {
+                let row = scoresTable.insertRow();
+                row.insertCell(0).textContent = index + 1;
+                row.insertCell(1).textContent = score;
+            });
+        }
+
+        function takeQuiz() {
+            window.location.href = '/quiz.html';
+        }
+
+        loadUserData();
+    </script>
+</body>
+</html>

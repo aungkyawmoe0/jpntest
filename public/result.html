@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz Result</title>
+</head>
+<body>
+    <h1>Your Quiz Result</h1>
+    <div id="resultContainer"></div>
+    <button id="tryAgainButton">Try Again</button>
+    <button id="backButton">Back to Dashboard</button>
+
+    <script>
+        async function loadResult() {
+            const response = await fetch('/result');
+            if (response.ok) {
+                const result = await response.json();
+                displayResult(result);
+            } else {
+                alert('Failed to load result');
+            }
+        }
+
+        function displayResult(result) {
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `
+                <p>Score: ${result.score}</p>
+                <ul>
+                    ${result.answers.map(answer => `
+                        <li>
+                            <p>Question: ${answer.question}</p>
+                            <p>Your Answer: ${answer.userAnswer} (${answer.isCorrect ? 'Correct' : 'Incorrect'})</p>
+                            <p>Correct Answer: ${answer.correctAnswer}</p>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        document.getElementById('tryAgainButton').addEventListener('click', () => {
+            window.location.href = '/quiz.html';
+        });
+
+        document.getElementById('backButton').addEventListener('click', () => {
+            window.location.href = '/user_dashboard.html';
+        });
+
+        loadResult();
+    </script>
+</body>
+</html>

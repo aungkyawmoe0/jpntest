@@ -1,67 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Admin Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .container { max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-        h1 { color: #333; }
-        .users { margin-top: 20px; }
-        .users table { width: 100%; border-collapse: collapse; }
-        .users th, .users td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome, Admin</h1>
-        <button onclick="addQuestion()">Add Question</button>
-        <div class="users">
-            <h2>Users and Scores</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Scores</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTable">
-                </tbody>
-            </table>
-        </div>
-        <a href="/logout">Logout</a>
-    </div>
+    <h1>Admin Dashboard</h1>
+    <button id="addQuestionButton">Add Question</button>
+    <button id="showUsersButton">Show Users</button>
+    <button id="logoutButton">Logout</button>
+
     <script>
-        async function loadUserData() {
-            let response = await fetch('/admin');
-            let users = await response.json();
-            let usersTable = document.getElementById('usersTable');
-            users.forEach(user => {
-                let row = usersTable.insertRow();
-                row.insertCell(0).textContent = user.username;
-                row.insertCell(1).textContent = user.scores.join(', ');
-            });
-        }
+        document.getElementById('addQuestionButton').addEventListener('click', () => {
+            window.location.href = '/add_question.html';
+        });
 
-        function addQuestion() {
-            let question = prompt('Enter the new question:');
-            let options = prompt('Enter the options separated by commas:');
-            let answer = prompt('Enter the correct answer:');
-            if (question && options && answer) {
-                fetch('/addQuestion', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question, options: options.split(','), answer })
-                }).then(response => {
-                    if (response.ok) {
-                        alert('Question added successfully!');
-                    } else {
-                        alert('Failed to add question.');
-                    }
-                });
+        document.getElementById('showUsersButton').addEventListener('click', () => {
+            window.location.href = '/show_users.html';
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            const response = await fetch('/logout', { method: 'POST' });
+            if (response.ok) {
+                window.location.href = '/login.html';
+            } else {
+                alert('Failed to logout');
             }
-        }
-
-        loadUserData();
+        });
     </script>
 </body>
 </html>

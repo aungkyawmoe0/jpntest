@@ -1,55 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Quiz</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .container { max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-        .question { margin-bottom: 20px; }
-        button { padding: 10px 20px; }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Quiz</h1>
-        <div id="quiz-container"></div>
-        <button onclick="submitQuiz()">Submit</button>
-        <p id="result"></p>
-    </div>
+    <h1>Quiz</h1>
+    <form id="quizForm">
+        <div id="questions"></div>
+        <button type="submit">Submit</button>
+    </form>
+
     <script>
-        async function loadQuiz() {
-            let response = await fetch('/questions');
-            let questions = await response.json();
-            let container = document.getElementById('quiz-container');
-            questions.forEach((q, index) => {
-                let questionDiv = document.createElement('div');
-                questionDiv.className = 'question';
-                questionDiv.innerHTML = `
-                    <p>${q.question}</p>
-                    ${q.options.map((opt, i) => `<input type="radio" name="q${index}" value="${i}"> ${opt}<br>`).join('')}
-                `;
-                container.appendChild(questionDiv);
-            });
+        async function loadQuestions() {
+            const response = await fetch('/questions');
+            if (response.ok) {
+                const questions = await response.json();
+                const questionsDiv = document.getElementById('questions');
+                questions.forEach((question, index) => {
+                    let html = `<div>
+                        <p>${question.question}</p>`;
+                    question.options.forEach((option, i) => {
+                        html += `
+                            <input type="radio" id="question${index}option${i}" name="question${index}" value="${i}" required>
+                            <label for="question${index}option${i}">${option}</label><br>`;
+                    });
+                    html += `</div>`;
+                    questionsDiv.innerHTML += html;
+                });
+            } else {
+                alert('Failed to load questions');
+            }
         }
 
-        async function submitQuiz() {
-            let container = document.getElementById('quiz-container');
-            let answers = [];
-            container.querySelectorAll('input[type="radio"]:checked').forEach((input, index) => {
-                answers.push({ question: index, answer: parseInt(input.value) });
-            });
-
-            let response = await fetch('/submit', {
+        document.getElementById('quizForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const answers = [];
+            for (let entry of formData.entries()) {
+                answers.push(parseInt(entry[1]));
+            }
+            const response = await fetch('/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(answers)
             });
-            let result = await response.json();
-            let resultContainer = document.getElementById('result');
-            resultContainer.textContent = 'Your score is: ' + result.score;
-        }
+            if (response.ok) {
+                window.location.href = '/result.html';
+            } else {
+                alert('Failed to submit quiz');
+            }
+        });
 
-        loadQuiz();
+        loadQuestions();
     </script>
 </body>
 </html>

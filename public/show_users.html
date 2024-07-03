@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Show Users</title>
+</head>
+<body>
+    <h1>Users</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Scores</th>
+            </tr>
+        </thead>
+        <tbody id="userTable">
+        </tbody>
+    </table>
+
+    <script>
+        async function loadUsers() {
+            const response = await fetch('/showUsers');
+            if (response.ok) {
+                const users = await response.json();
+                const userTable = document.getElementById('userTable');
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    const usernameCell = document.createElement('td');
+                    usernameCell.textContent = user.username;
+                    row.appendChild(usernameCell);
+                    
+                    const scoresCell = document.createElement('td');
+                    scoresCell.textContent = user.scores.join(', ');
+                    row.appendChild(scoresCell);
+
+                    userTable.appendChild(row);
+                });
+            } else {
+                alert('Failed to load users');
+            }
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>

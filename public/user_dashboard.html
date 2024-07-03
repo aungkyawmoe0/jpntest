@@ -1,51 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>User Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        .container { max-width: 600px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-        h1 { color: #333; }
-        .scores { margin-top: 20px; }
-        .scores table { width: 100%; border-collapse: collapse; }
-        .scores th, .scores td { padding: 10px; border: 1px solid #ccc; text-align: left; }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome, <span id="username"></span></h1>
-        <button onclick="takeQuiz()">Take a Quiz</button>
-        <div class="scores">
-            <h2>Your Scores</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Quiz #</th>
-                        <th>Score</th>
-                    </tr>
-                </thead>
-                <tbody id="scoresTable">
-                </tbody>
-            </table>
-        </div>
-        <a href="/logout">Logout</a>
-    </div>
+    <h1>Welcome, <span id="username"></span></h1>
+    <p>Your scores:</p>
+    <ul id="scoresList"></ul>
+    <button id="takeQuizButton">Take a Quiz</button>
+    <button id="logoutButton">Logout</button>
+
     <script>
         async function loadUserData() {
-            let response = await fetch('/user');
-            let user = await response.json();
-            document.getElementById('username').textContent = user.username;
-            let scoresTable = document.getElementById('scoresTable');
-            user.scores.forEach((score, index) => {
-                let row = scoresTable.insertRow();
-                row.insertCell(0).textContent = index + 1;
-                row.insertCell(1).textContent = score;
-            });
+            const response = await fetch('/user');
+            if (response.ok) {
+                const user = await response.json();
+                document.getElementById('username').textContent = user.username;
+                displayScores(user.scores);
+            } else {
+                alert('Failed to load user data');
+            }
         }
 
-        function takeQuiz() {
-            window.location.href = '/quiz.html';
+        function displayScores(scores) {
+            const scoresList = document.getElementById('scoresList');
+            scoresList.innerHTML = scores.map(score => `<li>${score}</li>`).join('');
         }
+
+        document.getElementById('takeQuizButton').addEventListener('click', () => {
+            window.location.href = '/quiz.html';
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            const response = await fetch('/logout', { method: 'POST' });
+            if (response.ok) {
+                window.location.href = '/login.html';
+            } else {
+                alert('Failed to logout');
+            }
+        });
 
         loadUserData();
     </script>

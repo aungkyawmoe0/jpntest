@@ -4,8 +4,8 @@ const url = require('url');
 const fs = require('fs');
 
 const { handleRegister, handleLogin, handleLogout } = require('./routes/auth');
-const { handleQuestions, handleSubmit, handleAddQuestion } = require('./routes/quiz');
-const { handleUserPage, handleAdminPage } = require('./routes/user');
+const { handleQuestions, handleSubmit, handleAddQuestion, handleResult } = require('./routes/quiz');
+const { handleUserPage, handleAdminPage, handleShowUsers } = require('./routes/user');
 
 function serveStaticFile(res, filepath, contentType) {
     fs.readFile(filepath, (err, data) => {
@@ -38,8 +38,17 @@ const server = http.createServer((req, res) => {
         case '/admin_dashboard.html':
             serveStaticFile(res, path.join(__dirname, 'public', 'admin_dashboard.html'), 'text/html');
             break;
+        case '/add_question.html':
+            serveStaticFile(res, path.join(__dirname, 'public', 'add_question.html'), 'text/html');
+            break;
+        case '/show_users.html':
+            serveStaticFile(res, path.join(__dirname, 'public', 'show_users.html'), 'text/html');
+            break;
         case '/quiz.html':
             serveStaticFile(res, path.join(__dirname, 'public', 'quiz.html'), 'text/html');
+            break;
+        case '/result.html':
+            serveStaticFile(res, path.join(__dirname, 'public', 'result.html'), 'text/html');
             break;
         case '/register':
             handleRegister(req, res);
@@ -56,11 +65,17 @@ const server = http.createServer((req, res) => {
         case '/admin':
             handleAdminPage(req, res);
             break;
+        case '/showUsers':
+            handleShowUsers(req, res);
+            break;
         case '/questions':
             handleQuestions(req, res);
             break;
         case '/submit':
             handleSubmit(req, res);
+            break;
+        case '/result':
+            handleResult(req, res);
             break;
         case '/addQuestion':
             handleAddQuestion(req, res);

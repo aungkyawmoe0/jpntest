@@ -49,4 +49,22 @@ function handleAdminPage(req, res) {
     });
 }
 
-module.exports = { handleUserPage, handleAdminPage };
+function handleShowUsers(req, res) {
+    let cookies = querystring.parse(req.headers.cookie, '; ');
+    let sessionId = cookies.sessionId;
+    let userSession = sessions[sessionId];
+    if (!userSession || userSession.role !== 'admin') {
+        res.writeHead(401);
+        res.end('Unauthorized');
+        return;
+    }
+
+    fs.readFile(usersFilePath, (err, data) => {
+        if (err) throw err;
+        let users = JSON.parse(data).filter(user => user.role === 'user');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(users));
+    });
+}
+
+module.exports = { handleUserPage, handleAdminPage, handleShowUsers };

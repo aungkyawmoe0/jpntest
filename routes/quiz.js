@@ -16,44 +16,46 @@ function handleQuestions(req, res) {
 
 function handleSubmit(req, res) {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
     req.on('end', () => {
+        let cookies = querystring.parse(req.headers.cookie, '; ');
+        let sessionId = cookies.sessionId;
+        let userSession = sessions[sessionId];
+        if (!userSession) {
+            res.writeHead(401);
+            res.end('Unauthorized');
+            return;
+        }
+
         let answers = JSON.parse(body);
         fs.readFile(questionsFilePath, (err, data) => {
             if (err) throw err;
             let questions = JSON.parse(data);
-            let score = answers.reduce((score, answer) => {
-                return score + (questions[answer.question].answer === answer.answer ? 1 : 0);
-            }, 0);
-            
-            // Get the session ID and username
-            let cookies = querystring.parse(req.headers.cookie, '; ');
-            let sessionId = cookies.sessionId;
-            let userSession = sessions[sessionId];
-            if (!userSession) {
-                res.writeHead(401);
-                res.end('Unauthorized');
-                return;
-            }
+            let score = 0;
+            let resultAnswers = questions.map((question, index) => {
+                let isCorrect = question.answer == answers[index];
+                if (isCorrect) score++;
+                return {
+                    question: question.question,
+                    userAnswer: question.options[answers[index]],
+                    correctAnswer: question.options[question.answer],
+                    isCorrect: isCorrect
+                };
+            });
 
-            let username = userSession.username;
-
-            // Store the score
             fs.readFile(usersFilePath, (err, data) => {
                 if (err) throw err;
                 let users = JSON.parse(data);
-                let user = users.find(user => user.username === username);
-                if (user) {
-                    user.scores.push(score);
-                    fs.writeFile(usersFilePath, JSON.stringify(users), err => {
-                        if (err) throw err;
-                        res.writeHead(200, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({ score }));
-                    });
-                } else {
-                    res.writeHead(400);
-                    res.end('User not found');
-                }
+                let user = users.find(user => user.username === userSession.username);
+                user.scores.push(score);
+                fs.writeFile(usersFilePath, JSON.stringify(users), err => {
+                    if (err) throw err;
+                    userSession.result = { score, answers: resultAnswers };
+                    res.writeHead(200);
+                    res.end(JSON.stringify({ message: 'Quiz submitted successfully' }));
+                });
             });
         });
     });
@@ -61,20 +63,38 @@ function handleSubmit(req, res) {
 
 function handleAddQuestion(req, res) {
     let body = '';
-    req.on('data', chunk => body += chunk);
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
     req.on('end', () => {
-        let { question, options, answer } = JSON.parse(body);
+        let newQuestion = JSON.parse(body);
+
         fs.readFile(questionsFilePath, (err, data) => {
             if (err) throw err;
             let questions = JSON.parse(data);
-            questions.push({ question, options, answer });
+            questions.push(newQuestion);
+
             fs.writeFile(questionsFilePath, JSON.stringify(questions), err => {
                 if (err) throw err;
-                res.writeHead(200);
-                res.end('Question added');
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Question added successfully' }));
             });
         });
     });
 }
 
-module.exports = { handleQuestions, handleSubmit, handleAddQuestion };
+function handleResult(req, res) {
+    let cookies = querystring.parse(req.headers.cookie, '; ');
+    let sessionId = cookies.sessionId;
+    let userSession = sessions[sessionId];
+    if (!userSession) {
+        res.writeHead(401);
+        res.end('Unauthorized');
+        return;
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(userSession.result));
+}
+
+module.exports = { handleQuestions, handleSubmit, handleAddQuestion, handleResult };

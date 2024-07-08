@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  node-app:
+    image: node:20.14.0
+    container_name: japan_test_apps
+    working_dir: /usr/src/app
+    volumes:
+      - ./:/usr/src/app
+    ports:
+      - "80:3000"
+    command: ["node", "app.js"]

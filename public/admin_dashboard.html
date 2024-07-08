@@ -8,6 +8,7 @@
     <h1>Admin Dashboard</h1>
     <button id="addQuestionButton">Add Question</button>
     <button id="showUsersButton">Show Users</button>
+    <button id="updateQuizButton">Update Quiz</button>
     <button id="logoutButton">Logout</button>
 
     <script>
@@ -17,6 +18,10 @@
 
         document.getElementById('showUsersButton').addEventListener('click', () => {
             window.location.href = '/show_users.html';
+        });
+
+        document.getElementById('updateQuizButton').addEventListener('click', () => {
+            window.location.href = '/update-quiz.html';
         });
 
         document.getElementById('logoutButton').addEventListener('click', async () => {

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Quiz Question</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+        }
+        .option input[type="text"] {
+            margin-left: 10px;
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Question</h1>
+        <form id="editForm">
+            <div>
+                <label for="question">Question:</label>
+                <input type="text" id="question" name="question" required readonly>
+            </div>
+            <div id="optionsContainer"></div>
+            <div>
+                <label for="answer">Correct Answer (0-3):</label>
+                <input type="number" id="answer" name="answer" required min="0" max="3">
+            </div>
+            <button type="submit">Save</button>
+        </form>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadQuestion);
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        function loadQuestion() {
+            const index = getQueryParam('index');
+            fetch('/questions')
+                .then(response => response.json())
+                .then(data => {
+                    const question = data[index];
+                    document.getElementById('question').value = question.question;
+                    document.getElementById('answer').value = question.answer;
+                    const optionsContainer = document.getElementById('optionsContainer');
+                    optionsContainer.innerHTML = '';
+                    question.options.forEach((option, i) => {
+                        const optionElement = document.createElement('div');
+                        optionElement.className = 'option';
+                        optionElement.innerHTML = `
+                            <label for="option${i}">Option ${i + 1}:</label>
+                            <input type="text" id="option${i}" name="option${i}" value="${option}">
+                        `;
+                        optionsContainer.appendChild(optionElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading question:', error);
+                });
+        }
+
+        document.getElementById('editForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const index = getQueryParam('index');
+            const updatedQuestion = {
+                question: document.getElementById('question').value,
+                answer: parseInt(document.getElementById('answer').value, 10),
+                options: [
+                    document.getElementById('option0').value,
+                    document.getElementById('option1').value,
+                    document.getElementById('option2').value,
+                    document.getElementById('option3').value
+                ]
+            };
+            fetch(`/editQuestion/${index}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedQuestion)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    window.location.href = 'update-quiz.html';
+                })
+                .catch(error => {
+                    console.error('Error updating question:', error);
+                });
+        });
+    </script>
+</body>
+</html>

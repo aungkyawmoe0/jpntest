@@ -28,7 +28,7 @@
             <input type="text" id="option4" name="options" required>
         </div>
         <div>
-            <label for="answer">Correct Option:</label>
+            <label for="answer">Correct Answer (0-3)</label>
             <input type="number" id="answer" name="answer" min="0" max="3" required>
         </div>
         <button type="submit">Add Question</button>
@@ -40,7 +40,7 @@
             const formData = new FormData(event.target);
             const questionData = {};
             formData.forEach((value, key) => {
-                if (key === 'options') {
+                if (key == 'options') {
                     if (!questionData.options) questionData.options = [];
                     questionData.options.push(value);
                 } else {

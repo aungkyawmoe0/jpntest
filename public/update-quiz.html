@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Update Quiz</h1>
+        <div id="questions"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadQuestions);
+
+        function loadQuestions() {
+            fetch('/questions')
+                .then(response => response.json())
+                .then(data => {
+                    const questionsContainer = document.getElementById('questions');
+                    questionsContainer.innerHTML = '';
+                    data.forEach((question, index) => {
+                        const questionElement = document.createElement('div');
+                        questionElement.classList.add('question');
+                        questionElement.innerHTML = `
+                            <p><strong>Question:</strong> ${question.question}</p>
+                            <p><strong>Options:</strong></p>
+                            <ul>
+                                ${question.options.map(option => `<li>${option}</li>`).join('')}
+                            </ul>
+                            <p><strong>Answer:</strong> ${question.options[question.answer]}</p>
+                            <div class="buttons">
+                                <button onclick="editQuestion(${index})">Edit</button>
+                                <button onclick="deleteQuestion(${index})">Delete</button>
+                            </div>
+                        `;
+                        questionsContainer.appendChild(questionElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading questions:', error);
+                });
+        }
+
+        function editQuestion(index) {
+            window.location.href = `edit-quiz.html?index=${index}`;
+        }
+
+        function deleteQuestion(index) {
+            fetch(`/deleteQuestion/${index}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    loadQuestions();
+                })
+                .catch(error => {
+                    console.error('Error deleting question:', error);
+                });
+        }
+    </script>
+</body>
+</html>

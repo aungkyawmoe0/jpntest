@@ -61,25 +61,100 @@ function handleSubmit(req, res) {
     });
 }
 
-function handleAddQuestion(req, res) {
+const handleAddQuestion = (req, res) => {
     let body = '';
     req.on('data', chunk => {
         body += chunk.toString();
     });
     req.on('end', () => {
-        let newQuestion = JSON.parse(body);
-
-        fs.readFile(questionsFilePath, (err, data) => {
-            if (err) throw err;
-            let questions = JSON.parse(data);
-            questions.push(newQuestion);
-
-            fs.writeFile(questionsFilePath, JSON.stringify(questions), err => {
-                if (err) throw err;
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ message: 'Question added successfully' }));
+        try {
+            const newQuestion = JSON.parse(body);
+            if (newQuestion.options.length !== 4) {
+                res.writeHead(400);
+                res.end(JSON.stringify({ error: 'Each question must have exactly 4 options' }));
+                return;
+            }
+            fs.readFile(questionsFilePath, (err, data) => {
+                if (err) {
+                    res.writeHead(500);
+                    res.end(JSON.stringify({ error: 'Failed to load questions' }));
+                    return;
+                }
+                const questions = JSON.parse(data);
+                questions.push(newQuestion);
+                fs.writeFile(questionsFilePath, JSON.stringify(questions, null, 2), err => {
+                    if (err) {
+                        res.writeHead(500);
+                        res.end(JSON.stringify({ error: 'Failed to save question' }));
+                        return;
+                    }
+                    res.writeHead(200);
+                    res.end(JSON.stringify({ message: 'Question added successfully' }));
+                });
             });
+        } catch (error) {
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: 'Invalid JSON input' }));
+        }
+    });
+}
+
+const handleDeleteQuestion = (req, res, pathname) => {
+    const index = parseInt(pathname.split('/').pop(), 10);
+    fs.readFile(questionsFilePath, (err, data) => {
+        if (err) {
+            res.writeHead(500);
+            res.end(JSON.stringify({ error: 'Failed to load questions' }));
+            return;
+        }
+        const questions = JSON.parse(data);
+        questions.splice(index, 1);
+        fs.writeFile(questionsFilePath, JSON.stringify(questions, null, 2), err => {
+            if (err) {
+                res.writeHead(500);
+                res.end(JSON.stringify({ error: 'Failed to delete question' }));
+                return;
+            }
+            res.writeHead(200);
+            res.end(JSON.stringify({ message: 'Question deleted successfully' }));
         });
+    });
+}
+
+const handleEditQuestion = (req, res, pathname) => {
+    const index = parseInt(pathname.split('/').pop(), 10);
+    let body = '';
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
+    req.on('end', () => {
+        try {
+            const updatedQuestion = JSON.parse(body);
+            fs.readFile(questionsFilePath, (err, data) => {
+                if (err) {
+                    res.writeHead(500);
+                    res.end(JSON.stringify({ error: 'Failed to load questions' }));
+                    return;
+                }
+                const questions = JSON.parse(data);
+                if (updatedQuestion.options.length === 4) {
+                    questions[index].options = updatedQuestion.options;
+                }
+                questions[index].answer = updatedQuestion.answer;
+                fs.writeFile(questionsFilePath, JSON.stringify(questions, null, 2), err => {
+                    if (err) {
+                        res.writeHead(500);
+                        res.end(JSON.stringify({ error: 'Failed to update question' }));
+                        return;
+                    }
+                    res.writeHead(200);
+                    res.end(JSON.stringify({ message: 'Question updated successfully' }));
+                });
+            });
+        } catch (error) {
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: 'Invalid JSON input' }));
+        }
     });
 }
 
@@ -97,4 +172,4 @@ function handleResult(req, res) {
     res.end(JSON.stringify(userSession.result));
 }
 
-module.exports = { handleQuestions, handleSubmit, handleAddQuestion, handleResult };
+module.exports = { handleQuestions, handleSubmit, handleAddQuestion, handleDeleteQuestion, handleEditQuestion, handleResult };

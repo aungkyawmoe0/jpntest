@@ -4,7 +4,7 @@ const url = require('url');
 const fs = require('fs');
 
 const { handleRegister, handleLogin, handleLogout } = require('./routes/auth');
-const { handleQuestions, handleSubmit, handleAddQuestion, handleResult } = require('./routes/quiz');
+const { handleQuestions, handleSubmit, handleAddQuestion, handleDeleteQuestion, handleEditQuestion, handleResult } = require('./routes/quiz');
 const { handleUserPage, handleAdminPage, handleShowUsers } = require('./routes/user');
 
 function serveStaticFile(res, filepath, contentType) {
@@ -21,71 +21,82 @@ function serveStaticFile(res, filepath, contentType) {
 
 const server = http.createServer((req, res) => {
     const parsedUrl = url.parse(req.url);
-    switch (parsedUrl.pathname) {
-        case '/':
-        case '/index.html':
-            serveStaticFile(res, path.join(__dirname, 'public', 'index.html'), 'text/html');
-            break;
-        case '/register.html':
-            serveStaticFile(res, path.join(__dirname, 'public', 'register.html'), 'text/html');
-            break;
-        case '/login.html':
-            serveStaticFile(res, path.join(__dirname, 'public', 'login.html'), 'text/html');
-            break;
-        case '/user_dashboard.html':
-            serveStaticFile(res, path.join(__dirname, 'public', 'user_dashboard.html'), 'text/html');
-            break;
-        case '/admin_dashboard.html':
-            serveStaticFile(res, path.join(__dirname, 'public', 'admin_dashboard.html'), 'text/html');
-            break;
-        case '/add_question.html':
-            serveStaticFile(res, path.join(__dirname, 'public', 'add_question.html'), 'text/html');
-            break;
-        case '/show_users.html':
-            serveStaticFile(res, path.join(__dirname, 'public', 'show_users.html'), 'text/html');
-            break;
-        case '/quiz.html':
-            serveStaticFile(res, path.join(__dirname, 'public', 'quiz.html'), 'text/html');
-            break;
-        case '/result.html':
-            serveStaticFile(res, path.join(__dirname, 'public', 'result.html'), 'text/html');
-            break;
-        case '/register':
-            handleRegister(req, res);
-            break;
-        case '/login':
-            handleLogin(req, res);
-            break;
-        case '/logout':
-            handleLogout(req, res);
-            break;
-        case '/user':
-            handleUserPage(req, res);
-            break;
-        case '/admin':
-            handleAdminPage(req, res);
-            break;
-        case '/showUsers':
-            handleShowUsers(req, res);
-            break;
-        case '/questions':
+    const pathname = parsedUrl.pathname;
+
+    if (req.method === 'GET') {
+        if (pathname === '/' || pathname === '/index.html') {
+            serveStaticFile(res, './public/index.html', 'text/html');
+        } else if (pathname === '/login.html') {
+            serveStaticFile(res, './public/login.html', 'text/html');
+        } else if (pathname === '/register.html') {
+            serveStaticFile(res, './public/register.html', 'text/html');
+        } else if (pathname === '/quiz.html') {
+            serveStaticFile(res, './public/quiz.html', 'text/html');
+        } else if (pathname === '/result.html') {
+            serveStaticFile(res, './public/result.html', 'text/html');
+        } else if (pathname === '/user_dashboard.html') {
+            serveStaticFile(res, './public/user_dashboard.html', 'text/html');
+        } else if (pathname === '/admin_dashboard.html') {
+            serveStaticFile(res, './public/admin_dashboard.html', 'text/html');
+        } else if (pathname === '/add_question.html') {
+            serveStaticFile(res, './public/add_question.html', 'text/html');
+        } else if (pathname === '/show_users.html') {
+            serveStaticFile(res, './public/show_users.html', 'text/html');
+        } else if (pathname === '/update-quiz.html') {
+            serveStaticFile(res, './public/update-quiz.html', 'text/html');
+        } else if (pathname === '/edit-quiz.html') {
+            serveStaticFile(res, './public/edit-quiz.html', 'text/html');
+        } else if (pathname === '/questions') {
             handleQuestions(req, res);
-            break;
-        case '/submit':
-            handleSubmit(req, res);
-            break;
-        case '/result':
+        } else if (pathname === '/user') {
+            handleUserPage(req, res);
+        } else if (pathname === '/admin') {
+            handleAdminPage(req, res);
+        } else if (pathname === '/result') {
             handleResult(req, res);
-            break;
-        case '/addQuestion':
+        } else if (pathname === '/showUsers') {
+            handleShowUsers(req, res);
+        } else {
+            // Serve static files like CSS, JS, images
+            serveStaticFile(res, `./public${pathname}`, getContentType(pathname));
+        }
+    } else if (req.method === 'POST') {
+        if (pathname === '/register') {
+            handleRegister(req, res);
+        } else if (pathname === '/login') {
+            handleLogin(req, res);
+        } else if (pathname === '/logout') {
+            handleLogout(req, res);
+        } else if (pathname === '/submit') {
+            handleSubmit(req, res);
+        } else if (pathname === '/addQuestion') {
             handleAddQuestion(req, res);
-            break;
-        default:
-            res.writeHead(404);
-            res.end('Not found');
+        }
+    } else if (req.method === 'PUT') {
+        if (pathname.startsWith('/editQuestion/')) {
+            handleEditQuestion(req, res, pathname);
+        }
+    } else if (req.method === 'DELETE') {
+        if (pathname.startsWith('/deleteQuestion/')) {
+            handleDeleteQuestion(req, res, pathname);
+        }
     }
 });
 
+const getContentType = (pathname) => {
+    if (pathname.endsWith('.css')) {
+        return 'text/css';
+    } else if (pathname.endsWith('.js')) {
+        return 'application/javascript';
+    } else if (pathname.endsWith('.png')) {
+        return 'image/png';
+    } else if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) {
+        return 'image/jpeg';
+    } else {
+        return 'text/html';
+    }
+};
+
 server.listen(3000, () => {
-    console.log('Server running on port 3000');
+    console.log('Server listening on port 3000');
 });
